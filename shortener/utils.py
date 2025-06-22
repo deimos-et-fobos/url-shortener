@@ -19,8 +19,6 @@ def random_short_url():
 #     return ''
 
 def check_short_url(short_url):
-    if not short_url:
-        raise serializers.ValidationError({"short_url": "Url must not be an empty string"})  
     if short_url in PROTECTED_URLS:
         raise serializers.ValidationError({"short_url": "Url not available."})
     if ShortURL.objects.filter(short_url=short_url).exists():
