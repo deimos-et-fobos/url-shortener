@@ -15,6 +15,7 @@ class Redirect(views.APIView):
     permission_classes = [AllowAny]
     
     def get(self, request, short_url):
+        print(short_url)
         obj = get_object_or_404(ShortURL, short_url=short_url)
         # Save last access
         obj.last_access = timezone.now()
