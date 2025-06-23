@@ -2,15 +2,20 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .serializers import RegisterSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from config.utils import default_rate_limit
 
 CustomUser = get_user_model()
 
+@method_decorator(ratelimit(key='ip', rate='3/h', block=True), name='dispatch')
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
@@ -48,6 +53,7 @@ class RegisterView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
+@default_rate_limit
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -88,7 +94,8 @@ class LogoutView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-     
+
+@method_decorator(ratelimit(key='ip', rate='3/h', block=True), name='dispatch')
 class CustomTokenObtainPairView(TokenObtainPairView):
     @swagger_auto_schema(
         operation_id="user_login",
@@ -121,6 +128,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         return super().post(request, *args, **kwargs)
 
 
+@default_rate_limit
 class CustomTokenRefreshView(TokenRefreshView):
     @swagger_auto_schema(
         operation_id="refresh_access_token",
