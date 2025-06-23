@@ -1,8 +1,10 @@
 import pytest
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.urls import reverse
-from shortener.models import ShortURL, SHORT_URL_MAX_LENGTH
 from .serializers import ShortURLSerializer
+from shortener.models import ShortURL, SHORT_URL_MAX_LENGTH
 from shortener.utils import generate_short_url, ShortURLGenerationError
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -40,16 +42,18 @@ class TestRedirectView:
         url = reverse('shortener.api:redirect', kwargs={'short_url': short_url_obj.short_url})
         response = client.get(url)
         assert response.status_code == status.HTTP_302_FOUND
-        assert response["Location"] == TEST_URL
-        
+        assert response.url == short_url_obj.url
     
-    def test_updates_last_access(self, client, short_url_obj):
+    def test_updates_last_access(self, client, mocker, short_url_obj):
         last_access = short_url_obj.last_access
         sleep(1)
+        # Mock cache.get() to avoid caching the response 
+        mock = mocker.patch("shortener.api.views.cache.get", side_effect=[None])
         url = reverse('shortener.api:redirect', kwargs={'short_url': short_url_obj.short_url})
         response = client.get(url)
         short_url_obj.refresh_from_db()
         assert short_url_obj.last_access > last_access
+
 
 @pytest.mark.django_db
 class TestShortURLValidations:
@@ -83,6 +87,7 @@ class TestShortURLValidations:
         assert "short_url" in serializer.errors
         assert any("not available" in e for e in serializer.errors["short_url"])
 
+
 @pytest.mark.django_db
 class TestDuplicateShortURL:
     def test_generate_new_short_url_if_duplicate(self, mocker):
@@ -113,3 +118,31 @@ class TestCreateShortURL:
         url = reverse('shortener.api:create-short-url')
         response = client.post(url, {"url": TEST_URL})
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+class TestRedirectCache:
+    def test_redirect_cache(self, client, short_url_obj):
+        # Skip test if not using cache
+        if not settings.USE_CACHE:
+            pytest.skip("Cache disabled, skipping test...")
+            
+        # get key and clean cache
+        cache_key = f"shorturl:{short_url_obj.short_url}"
+        cache.delete(cache_key)
+
+        # 1st request, empty cache, save cache and redirect 
+        url = reverse('shortener.api:redirect', kwargs={'short_url': short_url_obj.short_url})
+        response = client.get(url)
+        assert response.status_code == 302
+        assert response.url == short_url_obj.url
+
+        # chech if cached value is correct
+        assert cache.get(cache_key) == short_url_obj.url
+
+        # 2nd request, get cached url and redirect
+        with patch('shortener.api.views.get_object_or_404') as mock_get:
+            response = client.get(url)
+            assert response.status_code == 302
+            assert response.url == short_url_obj.url
+            mock_get.assert_not_called()
