@@ -3,6 +3,7 @@ from rest_framework.test import APIClient
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from rest_framework import status
+from unittest.mock import patch
 
 User = get_user_model()
 
@@ -15,6 +16,7 @@ def test_user():
     return User.objects.create_user(email="testuser@gmail.com", password="testpass123!")
 
 @pytest.mark.django_db
+@patch('django_ratelimit.decorators.ratelimit', lambda *args, **kwargs: lambda x: x) # Disable Rate-Limit in tests
 class TestRegister:
     def test_register_user_success(self, client):
         url = reverse('accounts.api:register')
@@ -40,6 +42,7 @@ class TestRegister:
 
 
 @pytest.mark.django_db
+@patch('django_ratelimit.decorators.ratelimit', lambda *args, **kwargs: lambda x: x) # Disable Rate-Limit in tests
 class TestLogin:
     def test_login_success(self, client, test_user):
         url = reverse('accounts.api:login')
@@ -72,6 +75,7 @@ class TestLogin:
 
 
 @pytest.mark.django_db
+@patch('django_ratelimit.decorators.ratelimit', lambda *args, **kwargs: lambda x: x) # Disable Rate-Limit in tests
 class TestRefreshToken:
     def test_token_refresh(self, client, test_user):
         login_url = reverse('accounts.api:login')
@@ -85,6 +89,7 @@ class TestRefreshToken:
 
 
 @pytest.mark.django_db
+@patch('django_ratelimit.decorators.ratelimit', lambda *args, **kwargs: lambda x: x) # Disable Rate-Limit in tests
 class TestLogout:
     def test_logout_success(self, client, test_user):
         login_url = reverse('accounts.api:login')
