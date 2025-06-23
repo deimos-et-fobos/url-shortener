@@ -11,7 +11,6 @@ class ShortURLSerializer(serializers.ModelSerializer):
         fields = ['short_url', 'url']
 
     def validate_short_url(self, value):
-        print('aqui')
         if value:
             if len(value) > SHORT_URL_MAX_LENGTH:
                 raise serializers.ValidationError(f"Url must be at most {SHORT_URL_MAX_LENGTH} characters")
