@@ -19,9 +19,9 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("SECRET_KEY", 'django-insecure-2m$(+9fln#r)r6k9o(2x-fc8kytvb)c!p!__%h(l6dtpqqh8uz')
-DEBUG = os.environ.get("DEBUG", "True") == "True"
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "127.0.0.1").split(",")
+SECRET_KEY = os.getenv("SECRET_KEY") or 'django-insecure-2m$(+9fln#r)r6k9o(2x-fc8kytvb)c!p!__%h(l6dtpqqh8uz'
+DEBUG = os.getenv("DEBUG", "True") == "True"
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1").split(",")
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 if ENVIRONMENT == 'production':
@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'corsheaders',  # CORS support
     'drf_yasg',
     'accounts',
     'shortener'
@@ -72,15 +73,24 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if ENVIRONMENT == 'production':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('POSTGRES_DB') or 'postgres',
+            'USER': os.getenv('POSTGRES_USER') or 'postgres',
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD') or 'postgres',
+            'HOST': os.getenv('POSTGRES_HOST') or 'localhost',
+            'PORT': int(os.getenv('POSTGRES_PORT') or '5432' ),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Use a custom user model
 AUTH_USER_MODEL = 'accounts.CustomUser'
@@ -127,6 +137,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static"),]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -139,7 +151,7 @@ SIMPLE_JWT = {
     "SIGNING_KEY": SECRET_KEY
 }
 
-SHORT_URL_LENGTH = int(os.environ.get("SHORT_URL_LENGTH", 8))
+SHORT_URL_LENGTH = int(os.getenv("SHORT_URL_LENGTH", 8))
 
 SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,
@@ -152,3 +164,35 @@ SWAGGER_SETTINGS = {
     },
     'SECURITY_REQUIREMENTS': [],
 }
+
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    origin.strip() for origin in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if origin.strip()
+]
+    
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+]
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'authorization',
+    'content-type',
+    'x-csrftoken',
+]
+
+# Security settings for production
+if ENVIRONMENT == 'production':
+    CSRF_TRUSTED_ORIGINS = [
+        origin.strip() for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()
+    ]
+    CORS_ALLOW_CREDENTIALS = True
+    SESSION_COOKIE_SECURE = True  
+    CSRF_COOKIE_SECURE = True  
+    SECURE_SSL_REDIRECT = True  
+    SECURE_BROWSER_XSS_FILTER = True  
+    SECURE_CONTENT_TYPE_NOSNIFF = True  
+    
+# Use Redis for Cache, default = False
+USE_CACHE = os.getenv("USE_CACHE", "False") == "True"
