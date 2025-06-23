@@ -5,17 +5,49 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from shortener.models import ShortURL
 from .serializers import ShortURLSerializer
 from django.utils import timezone
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 class CreateShortURL(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ShortURLSerializer
 
+    @swagger_auto_schema(
+        operation_id="create_short_url",
+        operation_description="Create a new short URL",
+        tags=["Shortener"],
+        security=[{'Bearer': []}],
+        responses={
+            201: openapi.Response(
+                description="Short URL created",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "url": openapi.Schema(type=openapi.TYPE_STRING, example="https://www.google.com"),
+                        "short_url": openapi.Schema(type=openapi.TYPE_STRING, example="as2dD37F")
+                    }
+                )
+            ),
+            400: "Bad Request"
+        }
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
 
 class Redirect(views.APIView):
     permission_classes = [AllowAny]
     
+    @swagger_auto_schema(
+        operation_id="redirect_to_URL",
+        operation_description="Redirect to the original URL: short URL --> URL",
+        tags=["Shortener"],
+        responses={
+            302: openapi.Response(description="Redirected to the original URL"),
+            404: openapi.Response(description="Short URL not found"),
+        }
+    )
     def get(self, request, short_url):
-        print(short_url)
         obj = get_object_or_404(ShortURL, short_url=short_url)
         # Save last access
         obj.last_access = timezone.now()
