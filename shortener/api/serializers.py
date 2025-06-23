@@ -14,7 +14,7 @@ class ShortURLSerializer(serializers.ModelSerializer):
         print('aqui')
         if value:
             if len(value) > SHORT_URL_MAX_LENGTH:
-                raise serializers.ValidationError("Url must be at most {SHORT_URL_MAX_LENGTH} characters")
+                raise serializers.ValidationError(f"Url must be at most {SHORT_URL_MAX_LENGTH} characters")
             if not re.fullmatch(r'[a-zA-Z0-9]+', value):
                 raise serializers.ValidationError("Url can contain only numbers and letters")
             check_short_url(value)

@@ -20,9 +20,9 @@ def random_short_url():
 
 def check_short_url(short_url):
     if short_url in PROTECTED_URLS:
-        raise serializers.ValidationError({"short_url": "Url not available."})
+        raise serializers.ValidationError("Url not available.")
     if ShortURL.objects.filter(short_url=short_url).exists():
-        raise serializers.ValidationError({"short_url": "Url not available."})  
+        raise serializers.ValidationError("Url not available.")  
     pass
     
 def generate_short_url(custom_short=None):
