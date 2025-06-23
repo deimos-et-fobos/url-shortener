@@ -51,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_ratelimit.middleware.RatelimitMiddleware'
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -210,3 +211,7 @@ else:
             'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
         }
     }
+    
+# Default rate limit
+RATE_LIMIT = os.getenv("RATE_LIMIT") or '10/m'
+RATELIMIT_VIEW = 'config.views.ratelimit_error_view'
