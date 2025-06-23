@@ -1,4 +1,5 @@
-from django.http import HttpResponseRedirect
+import logging
+from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import views, generics, permissions
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -9,6 +10,8 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from django.core.cache import cache
 from config.utils import default_rate_limit
+
+logger = logging.getLogger('shortener')
 
 @default_rate_limit
 class CreateShortURL(generics.CreateAPIView):
@@ -36,6 +39,10 @@ class CreateShortURL(generics.CreateAPIView):
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
+    
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        logger.info(f"User {self.request.user} created short URL: {instance}")
 
 
 @default_rate_limit
@@ -60,7 +67,11 @@ class Redirect(views.APIView):
             # If it's in cache renew TTL
             cache.set(cache_key, url, timeout=3600)
         else:
-            obj = get_object_or_404(ShortURL, short_url=short_url)   
+            try:
+                obj = get_object_or_404(ShortURL, short_url=short_url) 
+            except Http404:
+                logger.warning(f'Short URL not found: {short_url}')
+                raise 
             url = obj.url
             # Save in the Cache
             cache.set(cache_key, url, timeout=3600)  # 1hs
@@ -68,4 +79,5 @@ class Redirect(views.APIView):
             obj.last_access = timezone.now()
             obj.save(update_fields=["last_access"])
             
+        logger.info(f"Redirecting: {short_url} -> {url}")
         return HttpResponseRedirect(redirect_to=url)
