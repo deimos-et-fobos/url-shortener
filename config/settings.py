@@ -235,10 +235,16 @@ LOGGING = {
         },
     },
     'handlers': {
-        'file': {
+        'file_shortener': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
             'filename': os.path.join(LOG_DIR, 'shortener.log'),
+            'formatter': 'verbose',
+        },
+        'file_auth': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'auth.log'),
             'formatter': 'verbose',
         },
         'console': {
@@ -249,7 +255,12 @@ LOGGING = {
     },
     'loggers': {
         'shortener': {
-            'handlers': ['file', 'console'],
+            'handlers': ['file_shortener', 'console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'auth': {
+            'handlers': ['file_auth', 'console'],
             'level': 'DEBUG',
             'propagate': False,
         },

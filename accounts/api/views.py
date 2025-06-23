@@ -1,3 +1,4 @@
+import logging
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -14,8 +15,9 @@ from drf_yasg import openapi
 from config.utils import default_rate_limit
 
 CustomUser = get_user_model()
+logger = logging.getLogger('auth')
 
-@method_decorator(ratelimit(key='ip', rate='3/h', block=True), name='dispatch')
+@method_decorator(ratelimit(key='ip', rate='5/h', block=True), name='dispatch')
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
@@ -46,10 +48,15 @@ class RegisterView(APIView):
         }
     )
     def post(self, request):
+        ip = request.META.get('REMOTE_ADDR')
+        email = request.data.get('email')
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            user = serializer.save()
+            logger.info(f"User registration successed: {email} | IP: {ip}")
             return Response({"detail": "User created"}, status=status.HTTP_201_CREATED)
+        
+        logger.warning(f"User registration failed: {email} | IP: {ip} | Errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
@@ -95,7 +102,7 @@ class LogoutView(APIView):
             )
 
 
-@method_decorator(ratelimit(key='ip', rate='3/h', block=True), name='dispatch')
+@method_decorator(ratelimit(key='ip', rate='5/h', block=True), name='dispatch')
 class CustomTokenObtainPairView(TokenObtainPairView):
     @swagger_auto_schema(
         operation_id="user_login",
@@ -125,7 +132,17 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         }
     )
     def post(self, request, *args, **kwargs):
-        return super().post(request, *args, **kwargs)
+        ip = request.META.get('REMOTE_ADDR')
+        email = request.data.get('email')
+        try:        
+            response = super().post(request, *args, **kwargs)
+            if response.status_code == 200:
+                logger.info(f"Login successful | Email: {email} | IP: {ip}")
+        except:
+            logger.warning(f"Login failed | Email: {email} | IP: {ip}")
+            raise
+
+        return response
 
 
 @default_rate_limit
