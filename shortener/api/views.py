@@ -8,7 +8,9 @@ from django.utils import timezone
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from django.core.cache import cache
+from config.utils import default_rate_limit
 
+@default_rate_limit
 class CreateShortURL(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ShortURLSerializer
@@ -36,6 +38,7 @@ class CreateShortURL(generics.CreateAPIView):
         return super().post(request, *args, **kwargs)
 
 
+@default_rate_limit
 class Redirect(views.APIView):
     permission_classes = [AllowAny]
     
