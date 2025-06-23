@@ -20,7 +20,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY") or 'django-insecure-2m$(+9fln#r)r6k9o(2x-fc8kytvb)c!p!__%h(l6dtpqqh8uz'
-DEBUG = os.getenv("DEBUG", "True") == "True"
+DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1").split(",")
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
@@ -195,4 +195,17 @@ if ENVIRONMENT == 'production':
     SECURE_CONTENT_TYPE_NOSNIFF = True  
     
 # Use Redis for Cache, default = False
-USE_CACHE = os.getenv("USE_CACHE", "False") == "True"
+USE_CACHE = os.getenv("USE_CACHE", "False").lower() == "true"
+if USE_CACHE:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': os.getenv("REDIS_URL", "redis://localhost:6379/0"),
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    }

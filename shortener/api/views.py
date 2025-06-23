@@ -7,6 +7,7 @@ from .serializers import ShortURLSerializer
 from django.utils import timezone
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from django.core.cache import cache
 
 class CreateShortURL(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -48,8 +49,20 @@ class Redirect(views.APIView):
         }
     )
     def get(self, request, short_url):
-        obj = get_object_or_404(ShortURL, short_url=short_url)
-        # Save last access
-        obj.last_access = timezone.now()
-        obj.save(update_fields=["last_access"])
-        return HttpResponseRedirect(redirect_to=obj.url)
+        cache_key = f"shorturl:{short_url}"
+        # Get value from cache
+        url = cache.get(cache_key)
+
+        if url:
+            # If it's in cache renew TTL
+            cache.set(cache_key, url, timeout=3600)
+        else:
+            obj = get_object_or_404(ShortURL, short_url=short_url)   
+            url = obj.url
+            # Save in the Cache
+            cache.set(cache_key, url, timeout=3600)  # 1hs
+            # Save last access
+            obj.last_access = timezone.now()
+            obj.save(update_fields=["last_access"])
+            
+        return HttpResponseRedirect(redirect_to=url)
