@@ -27,3 +27,19 @@ class ShortURLSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"short_url": str(e)})
         
         return ShortURL.objects.create(**validated_data)
+    
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+
+        if request:
+            domain = request.build_absolute_uri('/')
+            print(domain)
+            # domain = request.build_absolute_uri('/')[:-1]  
+            representation['short_url'] = f"{domain}{instance.short_url}"
+        else:
+            default_domain = "http://localhost:8000"
+            representation['short_url'] = f"{default_domain}/{instance.short_url}"
+
+        return representation
