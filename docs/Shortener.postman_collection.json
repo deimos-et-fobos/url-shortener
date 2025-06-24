@@ -1,0 +1,66 @@
+{
+	"info": {
+		"_postman_id": "8bd27fed-8172-4f76-a68d-4cb53495b96f",
+		"name": "Shortener",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "23607091",
+		"_collection_link": "https://blue-flare-332210.postman.co/workspace/url-shortener~9495b36e-572f-446f-a420-6a5e21eaec9d/collection/23607091-8bd27fed-8172-4f76-a68d-4cb53495b96f?action=share&source=collection_link&creator=23607091"
+	},
+	"item": [
+		{
+			"name": "create",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"url\": \"https://www.google.com/\",\n    \"short_url\": \"shortURL\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url_base}}/api/shortener/",
+					"host": [
+						"{{url_base}}"
+					],
+					"path": [
+						"api",
+						"shortener",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "redirect",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url_base}}/shortURL",
+					"host": [
+						"{{url_base}}"
+					],
+					"path": [
+						"shortURL"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
