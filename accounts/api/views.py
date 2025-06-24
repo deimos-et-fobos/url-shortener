@@ -17,7 +17,7 @@ from config.utils import default_rate_limit
 CustomUser = get_user_model()
 logger = logging.getLogger('auth')
 
-@method_decorator(ratelimit(key='ip', rate='5/h', block=True), name='dispatch')
+@method_decorator(ratelimit(key='ip', rate='100/h', block=True), name='dispatch')
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
@@ -102,7 +102,7 @@ class LogoutView(APIView):
             )
 
 
-@method_decorator(ratelimit(key='ip', rate='5/h', block=True), name='dispatch')
+@method_decorator(ratelimit(key='ip', rate='100/h', block=True), name='dispatch')
 class CustomTokenObtainPairView(TokenObtainPairView):
     @swagger_auto_schema(
         operation_id="user_login",
