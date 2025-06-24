@@ -91,16 +91,16 @@ class TestShortURLValidations:
 @pytest.mark.django_db
 class TestDuplicateShortURL:
     def test_generate_new_short_url_if_duplicate(self, mocker):
-        ShortURL.objects.create(short_url=TEST_URL, url=TEST_URL)
+        ShortURL.objects.create(short_url=TEST_SHORT_URL, url=TEST_URL)
         # Mock random_short_url to return TEST_URL twice, and then "1234abcd"
-        mock_random = mocker.patch("shortener.utils.random_short_url", side_effect=[TEST_URL, TEST_URL, "UNIQUE"])
+        mock_random = mocker.patch("shortener.utils.random_short_url", side_effect=[TEST_SHORT_URL, TEST_SHORT_URL, "UNIQUE"])
         result = generate_short_url(None)
         assert result == "UNIQUE"
         assert mock_random.call_count == 3
         
     def test_couldnt_generate_unique_short_url(self, mocker):
-        ShortURL.objects.create(short_url=TEST_URL, url=TEST_URL)
-        mock_random_short_url = mocker.patch("shortener.utils.random_short_url", side_effect=[TEST_URL] * 10)
+        ShortURL.objects.create(short_url=TEST_SHORT_URL, url=TEST_URL)
+        mock_random_short_url = mocker.patch("shortener.utils.random_short_url", side_effect=[TEST_SHORT_URL] * 10)
         with pytest.raises(ShortURLGenerationError, match="Couldn't create a unique short url"):
             generate_short_url(None)
         assert mock_random_short_url.call_count == 10
