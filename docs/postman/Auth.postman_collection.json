@@ -1,0 +1,266 @@
+{
+	"info": {
+		"_postman_id": "100e86b4-cbdb-4427-8131-db9ba97d9a82",
+		"name": "Auth",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "23607091",
+		"_collection_link": "https://blue-flare-332210.postman.co/workspace/url-shortener~9495b36e-572f-446f-a420-6a5e21eaec9d/collection/23607091-100e86b4-cbdb-4427-8131-db9ba97d9a82?action=share&source=collection_link&creator=23607091"
+	},
+	"item": [
+		{
+			"name": "login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (pm.response.code === 200) {",
+							"    const res = pm.response.json();",
+							"    if (res.access && res.refresh) {",
+							"        pm.globals.set(\"access_token\", res.access);",
+							"        pm.globals.set(\"refresh_token\", res.refresh);",
+							"        console.log(\"Tokens guardados\");",
+							"    } else {",
+							"        console.warn(\"No se encontraron tokens\");",
+							"    }",
+							"} else {",
+							"    console.error(\"Error en login. Status:\", pm.response.code);",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"example@gmail.com\",\n    \"password\": \"pass1234!\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{auth_url_base}}/login/",
+					"host": [
+						"{{auth_url_base}}"
+					],
+					"path": [
+						"login",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "register",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"example@gmail.com\",\n    \"password1\": \"pass1234!\",\n    \"password2\": \"pass1234!\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{auth_url_base}}/register/",
+					"host": [
+						"{{auth_url_base}}"
+					],
+					"path": [
+						"register",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "refresh",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (pm.response.code === 200) {",
+							"    const res = pm.response.json();",
+							"    if (res.access) {",
+							"        pm.globals.set(\"access_token\", res.access);",
+							"        console.log(\"Token guardado\");",
+							"    } else {",
+							"        console.warn(\"No se encontró token\");",
+							"    }",
+							"} else {",
+							"    console.error(\"Error en refresh token. Status:\", pm.response.code);",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"refresh\": \"{{refresh_token}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{auth_url_base}}/token-refresh/",
+					"host": [
+						"{{auth_url_base}}"
+					],
+					"path": [
+						"token-refresh",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "logout",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (pm.response.code === 200) {",
+							"    pm.globals.set(\"access_token\", \"\");",
+							"    pm.globals.set(\"refresh_token\", \"\");",
+							"    console.log(\"✅ Tokens eliminados exitosamente\");",
+							"} else {",
+							"    console.error(\"❌ Error en logout. Código de estado:\", pm.response.code);",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"refresh\": \"{{refresh_token}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{auth_url_base}}/logout/",
+					"host": [
+						"{{auth_url_base}}"
+					],
+					"path": [
+						"logout",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					"let url_base = pm.globals.get(\"url_base\");",
+					"pm.collectionVariables.set(\"auth_url_base\", `${url_base}/api/auth`);"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "auth_url_base",
+			"value": ""
+		}
+	]
+}

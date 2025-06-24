@@ -9,26 +9,23 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+import os
 from pathlib import Path
+from datetime import timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+SECRET_KEY = os.getenv("SECRET_KEY") or 'django-insecure-2m$(+9fln#r)r6k9o(2x-fc8kytvb)c!p!__%h(l6dtpqqh8uz'
+DEBUG = os.getenv("DEBUG", "True").lower() == "true"
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1").split(",")
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-2m$(+9fln#r)r6k9o(2x-fc8kytvb)c!p!__%h(l6dtpqqh8uz'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
-
-# Application definition
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+if ENVIRONMENT == 'production':
+    DEBUG = False
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -37,16 +34,25 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
+    'corsheaders',  # CORS support
+    'drf_yasg',
+    'accounts',
+    'shortener'
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_ratelimit.middleware.RatelimitMiddleware'
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -68,20 +74,39 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Use Postgres in Production or if user specifies so
+USE_POSTGRES = os.getenv("USE_POSTGRES", "False").lower() == "true"
+if ENVIRONMENT == 'production' or USE_POSTGRES == True:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('POSTGRES_DB') or 'postgres',
+            'USER': os.getenv('POSTGRES_USER') or 'postgres',
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD') or 'postgres',
+            'HOST': os.getenv('POSTGRES_HOST') or 'localhost',
+            'PORT': int(os.getenv('POSTGRES_PORT') or '5432' ),
+        }
     }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+
+# Use a custom user model
+AUTH_USER_MODEL = 'accounts.CustomUser'
+
+# Authentication with simplejwt
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',  # Default requires authentication
+    ),
 }
-
-
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -104,7 +129,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Argentina/Buenos_Aires'
 
 USE_I18N = True
 
@@ -115,8 +140,130 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static"),]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "SIGNING_KEY": SECRET_KEY
+}
+
+SHORT_URL_LENGTH = int(os.getenv("SHORT_URL_LENGTH", 8))
+
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+        }
+    },
+    'SECURITY_REQUIREMENTS': [],
+}
+SWAGGER_USE_COMPAT_RENDERERS = False
+
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    origin.strip() for origin in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if origin.strip()
+]
+    
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+]
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'authorization',
+    'content-type',
+    'x-csrftoken',
+]
+
+# Security settings for production
+if ENVIRONMENT == 'production':
+    CSRF_TRUSTED_ORIGINS = [
+        origin.strip() for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()
+    ]
+    CORS_ALLOW_CREDENTIALS = True
+    SESSION_COOKIE_SECURE = True  
+    CSRF_COOKIE_SECURE = True  
+    SECURE_SSL_REDIRECT = True    
+    SECURE_BROWSER_XSS_FILTER = True  
+    SECURE_CONTENT_TYPE_NOSNIFF = True  
+    
+# Use Redis for Cache, default = False
+USE_CACHE = os.getenv("USE_CACHE", "False").lower() == "true"
+if USE_CACHE:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': os.getenv("REDIS_URL", "redis://localhost:6379/0"),
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    }
+    
+# Default rate limit
+# IMPORTANT!!! Rate Limit will not have any effect if USE_CACHE=False
+RATE_LIMIT = os.getenv("RATE_LIMIT") or '10/m'
+RATELIMIT_VIEW = 'config.views.ratelimit_error_view'
+
+# Logging: console and file
+LOG_DIR = os.path.join(BASE_DIR, 'log')
+os.makedirs(LOG_DIR, exist_ok=True)
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} {name} - {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file_shortener': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'shortener.log'),
+            'formatter': 'verbose',
+        },
+        'file_auth': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'auth.log'),
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        }
+    },
+    'loggers': {
+        'shortener': {
+            'handlers': ['file_shortener', 'console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'auth': {
+            'handlers': ['file_auth', 'console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    }
+}
