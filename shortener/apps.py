@@ -16,6 +16,8 @@ class ShortenerConfig(AppConfig):
         if settings.DEBUG and settings.ENVIRONMENT == 'production':
             logger.warning(f"Server is in DEBUG mode during PRODUCTION")
         
+        logger.info(f"Database Engine: {settings.DATABASES.get('default').get('ENGINE')}")
+        
         if not settings.USE_CACHE:
             logger.warning("USE_CACHE=False: Rate Limiter will not have any effect")
         else:

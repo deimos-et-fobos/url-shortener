@@ -10,7 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
-import logging
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
@@ -46,6 +45,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -74,8 +74,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-
-if ENVIRONMENT == 'production':
+# Use Postgres in Production or if user specifies so
+USE_POSTGRES = os.getenv("USE_POSTGRES", "False").lower() == "true"
+if ENVIRONMENT == 'production' or USE_POSTGRES == True:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -193,7 +194,7 @@ if ENVIRONMENT == 'production':
     CORS_ALLOW_CREDENTIALS = True
     SESSION_COOKIE_SECURE = True  
     CSRF_COOKIE_SECURE = True  
-    SECURE_SSL_REDIRECT = True  
+    SECURE_SSL_REDIRECT = True    
     SECURE_BROWSER_XSS_FILTER = True  
     SECURE_CONTENT_TYPE_NOSNIFF = True  
     
