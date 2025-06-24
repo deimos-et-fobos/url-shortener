@@ -100,6 +100,7 @@ En caso de desear utilizar Docker, asegurarse de tener Docker y Docker Compose i
 Desde la raíz del proyecto ejecutar:
 
 ```bash
+cp .env.example .env
 docker compose up --build
 ```
 
