@@ -30,7 +30,7 @@ class CreateShortURL(generics.CreateAPIView):
                     type=openapi.TYPE_OBJECT,
                     properties={
                         "url": openapi.Schema(type=openapi.TYPE_STRING, example="https://www.google.com"),
-                        "short_url": openapi.Schema(type=openapi.TYPE_STRING, example="as2dD37F")
+                        "short_url": openapi.Schema(type=openapi.TYPE_STRING, example="http://127.0.0.1:8000/as2dD37F")
                     }
                 )
             ),

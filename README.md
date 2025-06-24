@@ -1,4 +1,8 @@
-# Manual de Instalación y Uso
+# # URL Shortener — Guía de Instalación y Uso
+Este proyecto es un acortador de URLs expuesto como una API REST.<br>
+A continuación se presenta una guía paso a paso para su instalación y uso.
+
+*Para más detalles técnicos sobre las decisiones de diseño, tecnologías utilizadas y justificación de la arquitectura, consulte [Detalles Técnicos](docs/README.md)*
 
 ## 1. Requisitos Previos
 
@@ -20,10 +24,7 @@ cd url-shortener
 
 ```bash
 python -m venv venv
-# Linux/macOS
 source venv/bin/activate   
-# o en Windows
-venv\Scripts\activate
 ```
 
 ## 4. Instalar Dependencias
@@ -69,7 +70,7 @@ python manage.py createsuperuser
 ```
 
 ## 8. Ejecutar Tests
-Puede ejecutar los tests y ver el coverage del mismo utilizando:
+Puede ejecutar los tests y generar un reporte del coverage del mismo utilizando:
 
 ```bash
 pytest --cov --cov-report=html
@@ -85,7 +86,7 @@ La API quedará disponible en:
 `http://127.0.0.1:8000/`
 
 
-## 12. Uso con Docker (opcional)
+## 10. Uso con Docker (opcional)
 
 En caso de desear utilizar Docker, asegurarse de tener Docker y Docker Compose instalados.
 
@@ -208,20 +209,19 @@ Respuesta:
 ```json
 {
   "url": "https://www.ejemplo.com/enlace-largo",
-  "short_url": "as2dD37F"
+  "short_url": "http://127.0.0.1:8000/as2dD37F"
 }
 ```
 
 ### Redirigir a URL original
 
-GET `http://127.0.0.1:8000/<short_url>/`
+GET `http://127.0.0.1:8000/<short_id>/`
 
 Ejemplo:
 
 `http://127.0.0.1:8000/as2dD37F/`
 
 Esto redirige automáticamente al enlace original.
-
 
 
 
@@ -232,7 +232,7 @@ Los logs se generan en la carpeta `log/`:
 * `auth.log`: eventos de autenticación
 
 ## 14. Postman
-En el directorio `docs/` se encontran archivos JSONs de Postman disponibles para probar la API:
+En el directorio `docs/postman/` puede encontrar colleciones de Postman disponibles para probar la API:
 - Auth.postman_collection.json
 - Shortener.postman_collection.json
 - workspace.postman_globals.json
@@ -240,7 +240,8 @@ En el directorio `docs/` se encontran archivos JSONs de Postman disponibles para
 ## 15. Archivos útiles
 
 * `.env.example`: ejemplo de variables de entorno
-* `docs/`: JSONs de Postman para probar la API
+* `docs/README.md`: documentación correspondiente a las tecnologías utilizadas
+* `docs/postman`: collecciones de Postman para probar la API
 * `docker-compose.yaml`: para levantar con Docker
 
 ## 16. Despliegue en Producción (opcional)
