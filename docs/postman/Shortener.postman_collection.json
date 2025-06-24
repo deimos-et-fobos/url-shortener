@@ -24,7 +24,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"url\": \"https://www.google.com/\",\n    \"short_url\": \"shortURL\"\n}",
+					"raw": "{\n    \"url\": \"https://www.google.com/\",\n    \"short_url\": \"myURL\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -51,12 +51,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{url_base}}/shortURL",
+					"raw": "{{url_base}}/myURL",
 					"host": [
 						"{{url_base}}"
 					],
 					"path": [
-						"shortURL"
+						"myURL"
 					]
 				}
 			},

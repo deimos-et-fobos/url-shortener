@@ -1,4 +1,4 @@
-# # URL Shortener — Guía de Instalación y Uso
+# URL Shortener — Guía de Instalación y Uso
 Este proyecto es un acortador de URLs expuesto como una API REST.<br>
 A continuación se presenta una guía paso a paso para su instalación y uso.
 
@@ -48,18 +48,21 @@ Configurar en `.env`:
 * `DEBUG`: `True` o `False`
 * `SECRET_KEY`: clave secreta Django
 * `USE_POSTGRES`: `True` para usar PostgreSQL, `False` para SQLite. En `production` siempre se utilizará PostgreSQL.
-* `USE_CACHE`: `True` para habilitar Redis (cache y rate limiting)
+* `USE_CACHE`: `True` habilitar Redis para cache y rate limiting. Por defecto `False`.
 * `REDIS_URL`: URL de Redis, ejemplo: `redis://localhost:6379/0`
 * `RATE_LIMIT`: Rate Limit. Por defecto '10/m'
 * `CORS_ALLOWED_ORIGINS`: Lista de orígenes permitidos CORS para producción separados por `,`
 * `CSRF_TRUSTED_ORIGINS`: Lista de orígenes permitidos CSRF para producción separados por `,`
 * `SHORT_URL_LENGTH`: longitud de las short URL. Por defecto 8, máximo 10
 
+***ATENCIÓN: Si desea habilitar el uso de cache con Redis, asegurese de que Redis esté instalado y que el servicio este en funcionamiento. Caso contrario, deshabilite el uso de cache.***
+***ATENCIÓN: Para rate limiting es necesario que el uso cache este habilitado.***
 
-## 6. Migrar la Base de Datos
+## 6. Aplicar migraciones a la DB y realizar collectstatic
 
 ```bash
 python manage.py migrate
+python manage.py collectstatic
 ```
 
 ## 7. Crear Superuser 
@@ -68,6 +71,8 @@ Para utilizar el panel de administración de Django y gestionar usuarios u otros
 ```bash
 python manage.py createsuperuser
 ```
+
+El Admin Site estará disponible en: `http://127.0.0.1:8000/admin/`
 
 ## 8. Ejecutar Tests
 Puede ejecutar los tests y generar un reporte del coverage del mismo utilizando:
@@ -84,6 +89,8 @@ python manage.py runserver
 
 La API quedará disponible en:
 `http://127.0.0.1:8000/`
+
+***ATENCIÓN: Para pruebas locales, solo se podrán realizar solicitudes mediante el protocolo HTTP. Si se requiere HTTPS, deberá configurarse manualmente o utilizar un entorno de producción con certificados válidos.***
 
 
 ## 10. Uso con Docker (opcional)
@@ -125,6 +132,10 @@ La documentación de la API estará disponible en:
 
 
 ## 12. Uso de la API
+Para comenzar a utilizar la API, el usuario primero deberá registrarse y seguidamente realizar el login.<br>
+Luego podrá crear short URLs con IDs aleatorios o personalizados.<br>
+En caso de que el token de acceso expire, podrá obtener un token de acceso nuevo.<br>
+Finalmente, cualquier usuario que acceda a la short URL será redireccionado a la URL original.
 
 ### Registro de Usuario
 
@@ -137,7 +148,6 @@ POST `/api/auth/register/`
   "password2": "pass1234!"
 }
 ```
-
 
 ### Login y obtención de tokens JWT
 
